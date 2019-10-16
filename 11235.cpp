@@ -54,83 +54,46 @@ bool compare(pair<long long,long long> a,pair<long long,long long> b)
 
 struct data
 {
-    int Max;
-    int Left_element, Left_element_occurance;
-    int Right_element, Right_element_occurance;
+    int MaxFreq, LeftElem, LeftFreq, RightElem, RightFreq;
+    data(){}
+    data(int a, int b, int c, int d, int e)
+    {
+        MaxFreq=a; LeftElem=b; LeftFreq=c; RightElem=d; RightFreq=e;
+    }
 };
 
 int arr[maxn];
 data tree[4*maxn];
 
-data build(int node, int L, int R)
+data Merge(data A, data B)
 {
-    if(L==R)
-    {
-        data temp;
+    int a=max3(A.MaxFreq,B.MaxFreq,(A.RightElem==B.LeftElem)? A.RightFreq + B.LeftFreq : 0);
+    int b=A.LeftElem;
+    int c=(A.LeftElem==A.RightElem && A.RightElem==B.LeftElem) ? A.LeftFreq + B.LeftFreq : A.LeftFreq;
+    int d=B.RightElem;
+    int e=(B.LeftElem==B.RightElem && A.RightElem==B.LeftElem) ? A.RightFreq + B.RightFreq: B.RightFreq;
 
-        temp.Max=1;
+    return data(a,b,c,d,e);
+}
 
-        temp.Left_element=arr[L];
-        temp.Left_element_occurance=1;
-
-        temp.Right_element=arr[R];
-        temp.Right_element_occurance=1;
-
-        tree[node]=temp;
-
-        return temp;
-    }
+void build(int node, int L, int R)
+{
+    if(L==R){tree[node]=data(1,arr[L],1,arr[R],1); return;}
 
     int leftNode=node*2;
     int rightNode=node*2+1;
 
     int mid=(L+R)/2;
 
-    data leftData = build(leftNode,L,mid);
-    data rightData = build(rightNode,mid+1,R);
+    build(leftNode,L,mid);
+    build(rightNode,mid+1,R);
 
-    data Data;
-
-    int element = 0;
-    if(leftData.Right_element == rightData.Left_element)
-    {
-        element = leftData.Right_element_occurance + rightData.Left_element_occurance;
-    }
-    Data.Max = max3(leftData.Max, rightData.Max, element);
-
-    Data.Left_element = leftData.Left_element;
-    Data.Left_element_occurance = leftData.Left_element_occurance;
-    if(leftData.Left_element == leftData.Right_element)
-    {
-        if(leftData.Right_element == rightData.Left_element)
-        {
-            Data.Left_element_occurance += rightData.Left_element_occurance;
-        }
-    }
-
-    Data.Right_element = rightData.Right_element;
-    Data.Right_element_occurance = rightData.Right_element_occurance;
-    if(rightData.Left_element == rightData.Right_element)
-    {
-        if(leftData.Right_element == rightData.Left_element)
-        {
-            Data.Right_element_occurance += leftData.Right_element_occurance;
-        }
-    }
-
-    tree[node] = Data;
-
-    return Data;
+    tree[node]=Merge(tree[leftNode],tree[rightNode]);
 }
 
 data query(int node, int L, int R, int l, int r)
 {
-    if(l>R || r<L)
-    {
-        data temp;
-        temp.Max=0;
-        return temp;
-    }
+    if(l>R || r<L)return data(0,0,0,0,0);
     if(L>=l && R<=r)return tree[node];
 
     int leftNode=node*2;
@@ -141,39 +104,9 @@ data query(int node, int L, int R, int l, int r)
     data leftData = query(leftNode,L,mid,l,r);
     data rightData = query(rightNode,mid+1,R,l,r);
 
-    if(leftData.Max==0)return rightData;
-    if(rightData.Max==0)return leftData;
-
-    data Data;
-
-    int element=0;
-    if(leftData.Right_element == rightData.Left_element)
-    {
-        element = leftData.Right_element_occurance + rightData.Left_element_occurance;
-    }
-    Data.Max=max3(leftData.Max, rightData.Max, element);
-
-    Data.Left_element = leftData.Left_element;
-    Data.Left_element_occurance = leftData.Left_element_occurance;
-    if(leftData.Left_element == leftData.Right_element)
-    {
-        if(leftData.Right_element == rightData.Left_element)
-        {
-            Data.Left_element_occurance += rightData.Left_element_occurance;
-        }
-    }
-
-    Data.Right_element = rightData.Right_element;
-    Data.Right_element_occurance = rightData.Right_element_occurance;
-    if(rightData.Left_element == rightData.Right_element)
-    {
-        if(leftData.Right_element == rightData.Left_element)
-        {
-            Data.Right_element_occurance += leftData.Right_element_occurance;
-        }
-    }
-
-    return Data;
+    if(leftData.MaxFreq==0)return rightData;
+    if(rightData.MaxFreq==0)return leftData;
+    return Merge(leftData,rightData);
 }
 
 int main()
@@ -181,10 +114,10 @@ int main()
     IOS
 
     int n,q;
+
     while(scanf("%d",&n) && n)
     {
         scanf("%d",&q);
-
 
         for(int i=1; i<=n; i++)
         {
@@ -197,9 +130,7 @@ int main()
             int L,R;
             scanf("%d %d",&L,&R);
 
-            data output = query(1,1,n,L,R);
-
-            printf("%d\n", output.Max);
+            printf("%d\n", query(1,1,n,L,R).MaxFreq);
         }
     }
 
